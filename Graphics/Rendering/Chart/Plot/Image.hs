@@ -58,9 +58,13 @@ instance ImageData (Double,Double,Double) where
     C.surfaceMarkDirty surf
     return surf
 
+vflip :: A.Repr r e => A.Array r A.DIM2 e -> A.Array A.D A.DIM2 e
+vflip a = A.backpermute (A.extent a) (\(A.Z :. x :. y)->A.ix2 x (h-1-y)) a
+  where A.Z :. w :. h = A.extent a
+
 renderImage  :: (A.Repr r e, ImageData e) => Image r e x y -> PointMapFn x y -> CRender ()
 renderImage p pmap = preserveCState $ c $ do
-    surf <- C.liftIO $ copyArrayToSurface $ image_data_ p
+    surf <- C.liftIO $ copyArrayToSurface $ vflip $ image_data_ p
     C.setSourceSurface surf 0 0
     let ((x0,y0), (x1,y1)) = image_extent_ p
         Point x0' y0' = pmap (LValue x0, LValue y0)
