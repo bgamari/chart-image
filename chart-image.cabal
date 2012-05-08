@@ -16,3 +16,7 @@ cabal-version:       >=1.8
 library
   exposed-modules:     Graphics.Rendering.Chart.Plot.Image
   build-depends:       base ==4.5.*, cairo ==0.12.*, Chart ==0.15.*, repa ==3.1.*, array ==0.4.*, data-accessor-template ==0.2.*
+
+executable	       Test
+  main-is:	       Test.hs
+  build-depends:       base ==4.5.*, cairo ==0.12.*, Chart ==0.15.*, repa ==3.1.*, array ==0.4.*, data-accessor-template ==0.2.*, data-accessor ==0.2.*, Chart-gtk ==0.*
