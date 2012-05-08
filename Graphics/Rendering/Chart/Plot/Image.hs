@@ -8,18 +8,20 @@ module Graphics.Rendering.Chart.Plot.Image ( Image
 
 import qualified Graphics.Rendering.Cairo as C
 
-import Graphics.Rendering.Chart.Types
-import Graphics.Rendering.Chart.Plot.Types
-import Graphics.Rendering.Chart.Axis
+import           Graphics.Rendering.Chart.Types
+import           Graphics.Rendering.Chart.Plot.Types
+import           Graphics.Rendering.Chart.Axis
 
-import Data.Array.Repa ((:.)(..))
+import           Data.Word
+import           Data.Bits
+import           Data.Array.Repa ((:.)(..))
 import qualified Data.Array.Repa as A
-import Data.Array.Repa.Eval (Fillable, fromList)       
-import qualified Data.Array.MArray as DA       
+import           Data.Array.Repa.Eval (Fillable, fromList)
+import qualified Data.Array.MArray as DA
 
-import Data.Accessor.Template
+import           Data.Accessor.Template
 
-import Control.Monad
+import           Control.Monad
 
 data Image r e x y = Image { image_data_    :: A.Array r A.DIM2 e
                            , image_extent_  :: ((x,y), (x,y))
@@ -46,14 +48,14 @@ instance ImageData (Double,Double,Double) where
     let A.Z :. w :. h = A.extent a
     surf <- C.createImageSurface C.FormatRGB24 w h
     stride <- C.imageSurfaceGetStride surf
-    d <- C.imageSurfaceGetPixels surf
-    forM_ [0..w] $ \x->
-      forM_ [0..h] $ \y->do
+    d <- C.imageSurfaceGetPixels surf :: IO (C.SurfaceData Int Word32)
+    forM_ [0..w-1] $ \x->
+      forM_ [0..h-1] $ \y->do
         let (r,g,b) = a A.! (A.ix2 x y)
-            i = 3*(x+y*stride)
-        DA.writeArray d (i+0) r
-        DA.writeArray d (i+1) g
-        DA.writeArray d (i+2) b
+        DA.writeArray d (x+y*(stride `div` 4)) $ round (255*r) `shiftL` 16
+                                   .|. round (255*g) `shiftL` 8
+                                   .|. round (255*b)
+    C.surfaceMarkDirty surf
     return surf
 
 renderImage  :: (A.Repr r e, ImageData e) => Image r e x y -> PointMapFn x y -> CRender ()
